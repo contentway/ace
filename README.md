@@ -4,6 +4,7 @@ ACE
 [![godoc badge](http://godoc.org/github.com/contentway/ace?status.svg)](http://godoc.org/github.com/contentway/ace)
 [![Build Status](https://api.travis-ci.org/contentway/ace.svg?branch=master&t=3)](https://travis-ci.org/contentway/ace)
 [![Go Report Card](http://goreportcard.com/badge/contentway/ace?t=3)](http://goreportcard.com/report/contentway/ace)
+[![Coverage Status](https://coveralls.io/repos/github/contentway/ace/badge.svg?branch=master)](https://coveralls.io/github/contentway/ace?branch=master)
 
 Blazing fast Go Web Framework, originally by [plimble](https://github.com/plimble/ace), but went unmaintained, so
 we hope to give it a second life here.

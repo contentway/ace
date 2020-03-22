@@ -2,7 +2,6 @@ ACE
 ========
 
 [![godoc badge](http://godoc.org/github.com/contentway/ace?status.svg)](http://godoc.org/github.com/contentway/ace)
-[![gocover badge](http://gocover.io/_badge/github.com/contentway/ace?t=3)](http://gocover.io/github.com/contentway/ace)
 [![Build Status](https://api.travis-ci.org/contentway/ace.svg?branch=master&t=3)](https://travis-ci.org/contentway/ace)
 [![Go Report Card](http://goreportcard.com/badge/contentway/ace?t=3)](http://goreportcard.com/report/contentway/ace)
 

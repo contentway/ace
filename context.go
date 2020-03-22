@@ -3,7 +3,7 @@ package ace
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/plimble/sessions"
+	"github.com/contentway/ace/sessions"
 	"io"
 	"io/ioutil"
 	"log"

@@ -1,7 +1,7 @@
 package ace
 
 import (
-	"github.com/plimble/sessions/store/cookie"
+	"github.com/contentway/ace/sessions/store/cookie"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"

@@ -20,7 +20,7 @@ go get github.com/contentway/ace
 #### Import
 
 ```go
-import "github.com/plimble/ace"
+import "github.com/contentway/ace"
 ```
 
 ## Performance
@@ -244,10 +244,10 @@ a.Static("/assets", "./img")
 
 ##### Session
 
-You can use store from [sessions](https://github.com/plimble/sessions)
+You can use store from [sessions](https://github.com/contentway/ace/sessions)
 
 ```go
-import github.com/plimble/sessions/store/cookie
+import github.com/contentway/ace/sessions/store/cookie
 
 a := ace.New()
 
@@ -299,7 +299,7 @@ type Renderer interface {
 |-----------------------------------------------------	|---------------------------------------------	|
 | [gzip](https://github.com/plimble/ace-contrib/tree/master/gzip)         	| GZIP compress                               	|
 | [cors](https://github.com/plimble/ace-contrib/tree/master/cors)         	| Enable Cross-origin resource sharing (CORS) 	|
-| [sessions](https://github.com/plimble/sessions) 													| Sessions      				                      	|
+| [sessions](https://github.com/contentway/ace/sessions) 													| Sessions      				                      	|
 | [pongo2](https://github.com/plimble/ace-contrib/tree/master/pongo2)     	| Pongo2 Template Engine                      	|
 | [csrf](https://github.com/plimble/ace-contrib/tree/master/csrf)         	| Cross Site Request Forgery protection       	|
 

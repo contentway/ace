@@ -1,7 +1,7 @@
 package ace
 
 import (
-	"github.com/plimble/sessions"
+	"github.com/contentway/ace/sessions"
 )
 
 // SessionOptions are the options of the browser session

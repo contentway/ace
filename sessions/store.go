@@ -48,9 +48,9 @@ func (s *MemoryStore) Get(id string, buf *bytes.Buffer) error {
 	return err
 }
 
-func (s *MemoryStore) Delete(id string) error {
+func (s *MemoryStore) Delete(session *Session, _ http.ResponseWriter) error {
 	s.Lock()
-	delete(s.data, id)
+	delete(s.data, session.ID)
 	s.Unlock()
 
 	return nil

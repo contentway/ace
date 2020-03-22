@@ -46,7 +46,7 @@ func (s *Session) SetAll(vals map[string]interface{}) {
 	s.isWriten = true
 }
 
-//GetString return string value
+// GetString return string value from session
 func (s *Session) GetString(key string, def string) string {
 	v, ok := s.Values[key]
 	if !ok {
@@ -56,7 +56,7 @@ func (s *Session) GetString(key string, def string) string {
 	return v.(string)
 }
 
-//GetStrings return array string value
+// GetStrings return string array from session
 func (s *Session) GetStrings(key string, def []string) []string {
 	v, ok := s.Values[key]
 	if !ok {
@@ -72,7 +72,7 @@ func (s *Session) GetStrings(key string, def []string) []string {
 	return vals
 }
 
-//GetInt return int64 value
+// GetInt return int64 value from session
 func (s *Session) GetInt(key string, def int64) int64 {
 	v, ok := s.Values[key]
 	if !ok {
@@ -82,7 +82,7 @@ func (s *Session) GetInt(key string, def int64) int64 {
 	return v.(int64)
 }
 
-//GetInts return array int64 value
+// GetInts return array of int64 from session
 func (s *Session) GetInts(key string, def []int64) []int64 {
 	v, ok := s.Values[key]
 	if !ok {
@@ -98,7 +98,7 @@ func (s *Session) GetInts(key string, def []int64) []int64 {
 	return vals
 }
 
-//GetFloat return float64 value
+// GetFloat return float64 value from session
 func (s *Session) GetFloat(key string, def float64) float64 {
 	v, ok := s.Values[key]
 	if !ok {
@@ -108,7 +108,7 @@ func (s *Session) GetFloat(key string, def float64) float64 {
 	return v.(float64)
 }
 
-//GetFloats return array float64 value
+// GetFloats return array of float64 from session
 func (s *Session) GetFloats(key string, def []float64) []float64 {
 	v, ok := s.Values[key]
 	if !ok {
@@ -124,7 +124,7 @@ func (s *Session) GetFloats(key string, def []float64) []float64 {
 	return vals
 }
 
-//GetBool return bool value
+// GetBool return bool value from session
 func (s *Session) GetBool(key string, def bool) bool {
 	v, ok := s.Values[key]
 	if !ok {

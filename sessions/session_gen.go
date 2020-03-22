@@ -9,7 +9,7 @@ import (
 )
 
 // DecodeMsg implements msgp.Decodable
-func (z *Session) DecodeMsg(dc *msgp.Reader) (err error) {
+func (s *Session) DecodeMsg(dc *msgp.Reader) (err error) {
 	var field []byte
 	_ = field
 	var isz uint32
@@ -30,11 +30,11 @@ func (z *Session) DecodeMsg(dc *msgp.Reader) (err error) {
 			if err != nil {
 				return
 			}
-			if z.Values == nil && msz > 0 {
-				z.Values = make(map[string]interface{}, msz)
-			} else if len(z.Values) > 0 {
-				for key, _ := range z.Values {
-					delete(z.Values, key)
+			if s.Values == nil && msz > 0 {
+				s.Values = make(map[string]interface{}, msz)
+			} else if len(s.Values) > 0 {
+				for key := range s.Values {
+					delete(s.Values, key)
 				}
 			}
 			for msz > 0 {
@@ -49,7 +49,7 @@ func (z *Session) DecodeMsg(dc *msgp.Reader) (err error) {
 				if err != nil {
 					return
 				}
-				z.Values[xvk] = bzg
+				s.Values[xvk] = bzg
 			}
 		default:
 			err = dc.Skip()
@@ -62,18 +62,18 @@ func (z *Session) DecodeMsg(dc *msgp.Reader) (err error) {
 }
 
 // EncodeMsg implements msgp.Encodable
-func (z *Session) EncodeMsg(en *msgp.Writer) (err error) {
+func (s *Session) EncodeMsg(en *msgp.Writer) (err error) {
 	// map header, size 1
 	// write "v"
 	err = en.Append(0x81, 0xa1, 0x76)
 	if err != nil {
 		return err
 	}
-	err = en.WriteMapHeader(uint32(len(z.Values)))
+	err = en.WriteMapHeader(uint32(len(s.Values)))
 	if err != nil {
 		return
 	}
-	for xvk, bzg := range z.Values {
+	for xvk, bzg := range s.Values {
 		err = en.WriteString(xvk)
 		if err != nil {
 			return
@@ -87,13 +87,13 @@ func (z *Session) EncodeMsg(en *msgp.Writer) (err error) {
 }
 
 // MarshalMsg implements msgp.Marshaler
-func (z *Session) MarshalMsg(b []byte) (o []byte, err error) {
-	o = msgp.Require(b, z.Msgsize())
+func (s *Session) MarshalMsg(b []byte) (o []byte, err error) {
+	o = msgp.Require(b, s.Msgsize())
 	// map header, size 1
 	// string "v"
 	o = append(o, 0x81, 0xa1, 0x76)
-	o = msgp.AppendMapHeader(o, uint32(len(z.Values)))
-	for xvk, bzg := range z.Values {
+	o = msgp.AppendMapHeader(o, uint32(len(s.Values)))
+	for xvk, bzg := range s.Values {
 		o = msgp.AppendString(o, xvk)
 		o, err = msgp.AppendIntf(o, bzg)
 		if err != nil {
@@ -104,7 +104,7 @@ func (z *Session) MarshalMsg(b []byte) (o []byte, err error) {
 }
 
 // UnmarshalMsg implements msgp.Unmarshaler
-func (z *Session) UnmarshalMsg(bts []byte) (o []byte, err error) {
+func (s *Session) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var isz uint32
@@ -125,11 +125,11 @@ func (z *Session) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			if err != nil {
 				return
 			}
-			if z.Values == nil && msz > 0 {
-				z.Values = make(map[string]interface{}, msz)
-			} else if len(z.Values) > 0 {
-				for key, _ := range z.Values {
-					delete(z.Values, key)
+			if s.Values == nil && msz > 0 {
+				s.Values = make(map[string]interface{}, msz)
+			} else if len(s.Values) > 0 {
+				for key := range s.Values {
+					delete(s.Values, key)
 				}
 			}
 			for msz > 0 {
@@ -144,7 +144,7 @@ func (z *Session) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				if err != nil {
 					return
 				}
-				z.Values[xvk] = bzg
+				s.Values[xvk] = bzg
 			}
 		default:
 			bts, err = msgp.Skip(bts)
@@ -157,12 +157,12 @@ func (z *Session) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	return
 }
 
-func (z *Session) Msgsize() (s int) {
-	s = 1 + 2 + msgp.MapHeaderSize
-	if z.Values != nil {
-		for xvk, bzg := range z.Values {
+func (s *Session) Msgsize() (sz int) {
+	sz = 1 + 2 + msgp.MapHeaderSize
+	if s.Values != nil {
+		for xvk, bzg := range s.Values {
 			_ = bzg
-			s += msgp.StringPrefixSize + len(xvk) + msgp.GuessSize(bzg)
+			sz += msgp.StringPrefixSize + len(xvk) + msgp.GuessSize(bzg)
 		}
 	}
 	return

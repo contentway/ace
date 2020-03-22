@@ -26,9 +26,9 @@ func (t *SessionManagerSuite) TestSession() {
 	req, _ := http.NewRequest("GET", "http://localhost:8080/", nil)
 	w := httptest.NewRecorder()
 
-	sessions := t.m.GetSessions(req)
-	session, err := sessions.Get("test")
-	t.NoError(err)
+	reqSessions := t.m.GetSessions(req)
+	session := reqSessions.Get("test")
+	t.NotNil(session)
 
 	session.Set("foo", "abc")
 	session.Set("baz", 123)
@@ -38,11 +38,11 @@ func (t *SessionManagerSuite) TestSession() {
 	session.Set("float", 10.11)
 	session.Set("floats", []float64{10.11, 12.13})
 
-	err = sessions.Save(w)
+	err := reqSessions.Save(w)
 	t.NoError(err)
 	t.True(session.IsNew)
 
-	t.m.Close(sessions)
+	t.m.Close(reqSessions)
 
 	hdr := w.Header()
 	cookies, ok := hdr["Set-Cookie"]
@@ -53,9 +53,9 @@ func (t *SessionManagerSuite) TestSession() {
 	req.Header.Add("Cookie", cookies[0])
 	w = httptest.NewRecorder()
 
-	sessions = t.m.GetSessions(req)
-	session, err = sessions.Get("test")
-	t.NoError(err)
+	reqSessions = t.m.GetSessions(req)
+	session = reqSessions.Get("test")
+	t.NotNil(session)
 
 	t.False(session.IsNew)
 	t.Equal("abc", session.GetString("foo", ""))
@@ -71,19 +71,19 @@ func (t *SessionManagerSuite) TestFlashes() {
 	req, _ := http.NewRequest("GET", "http://localhost:8080/", nil)
 	w := httptest.NewRecorder()
 
-	sessions := t.m.GetSessions(req)
-	session, err := sessions.Get("test")
-	t.NoError(err)
+	reqSessions := t.m.GetSessions(req)
+	session := reqSessions.Get("test")
+	t.NotNil(session)
 
 	session.AddFlash("1")
 	session.AddFlash("2")
 	session.AddFlash("3")
 
-	err = sessions.Save(w)
+	err := reqSessions.Save(w)
 	t.NoError(err)
 	t.True(session.IsNew)
 
-	t.m.Close(sessions)
+	t.m.Close(reqSessions)
 
 	hdr := w.Header()
 	cookies, ok := hdr["Set-Cookie"]
@@ -94,9 +94,9 @@ func (t *SessionManagerSuite) TestFlashes() {
 	req.Header.Add("Cookie", cookies[0])
 	w = httptest.NewRecorder()
 
-	sessions = t.m.GetSessions(req)
-	session, err = sessions.Get("test")
-	t.NoError(err)
+	reqSessions = t.m.GetSessions(req)
+	session = reqSessions.Get("test")
+	t.NotNil(session)
 
 	flashes := session.Flashes()
 
@@ -137,13 +137,13 @@ func BenchmarkC1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		w := httptest.NewRecorder()
 
-		sessions := m.GetSessions(req)
-		session, _ := sessions.Get("test")
+		reqSessions := m.GetSessions(req)
+		session := reqSessions.Get("test")
 
 		session.Set("foo", "abc")
 		session.Set("baz", 123)
 
-		sessions.Save(w)
-		m.Close(sessions)
+		reqSessions.Save(w)
+		m.Close(reqSessions)
 	}
 }

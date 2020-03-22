@@ -44,7 +44,7 @@ func (s *FileSystemStore) Delete(session *sessions.Session, w http.ResponseWrite
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
 
-	if err := os.Remove(filepath.Join(s.path, "session_"+id)); err != nil {
+	if err := os.Remove(filepath.Join(s.path, "session_"+session.ID)); err != nil {
 		return err
 	}
 

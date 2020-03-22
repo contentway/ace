@@ -40,7 +40,7 @@ const (
 
 	HeaderAuthorization      = "Authorization"
 	HeaderContentType        = "Content-Type"
-	HeaderContentDisposition = "ContentDisposition"
+	HeaderContentDisposition = "Content-Disposition"
 
 	AbortMiddlewareIndex = math.MaxInt8 / 2
 )

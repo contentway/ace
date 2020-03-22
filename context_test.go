@@ -61,8 +61,8 @@ func TestDownloadResp(t *testing.T) {
 	a.ServeHTTP(w, r)
 	ass.Equal(200, w.Code)
 	ass.Equal("123", w.Body.String())
-	ass.Equal("application/octet-stream; charset=UTF-8", w.Header().Get("Content-Type"))
-	ass.Equal("attachment; filename=\"test.txt\"", w.Header().Get("Content-Disposition"))
+	ass.Equal("application/octet-stream; charset=UTF-8", w.Header().Get(HeaderContentType))
+	ass.Equal("attachment; filename=\"test.txt\"", w.Header().Get(HeaderContentDisposition))
 }
 
 func TestCData(t *testing.T) {

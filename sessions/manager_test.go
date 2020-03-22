@@ -59,7 +59,7 @@ func (t *SessionManagerSuite) TestSession() {
 
 	t.False(session.IsNew)
 	t.Equal("abc", session.GetString("foo", ""))
-	t.Equal(123, session.GetInt("baz", 0))
+	t.Equal(int64(123), session.GetInt("baz", 0))
 	t.Equal([]string{"1", "2", "3"}, session.GetStrings("test", nil))
 	t.Equal([]int64{1, 2, 3}, session.GetInts("test2", nil))
 	t.Equal(true, session.GetBool("bool", false))

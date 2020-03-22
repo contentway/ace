@@ -3,48 +3,92 @@ package ace
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/julienschmidt/httprouter"
 	"github.com/plimble/sessions"
-	"math"
+	"io"
+	"io/ioutil"
+	"log"
+	"mime/multipart"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
-	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-const (
-	contentType    = "Content-Type"
-	acceptLanguage = "Accept-Language"
-	abortIndex     = math.MaxInt8 / 2
-)
-
-//C is context for every goroutine
 type C struct {
-	writercache responseWriter
-	params      httprouter.Params
-	Request     *http.Request
-	Writer      ResponseWriter
-	index       int8
-	handlers    []HandlerFunc
-	data        map[string]interface{}
-	sessions    *sessions.Sessions
-	render      Renderer
+	Request      *http.Request
+	writercache  responseWriter
+	Writer       ResponseWriter
+	handlerIndex int8
+	handlers     []HandlerFunc
+	params       httprouter.Params
+	data         map[string]interface{}
+	sessions     *sessions.Sessions
+	render       Renderer
 }
 
 func (a *Ace) createContext(w http.ResponseWriter, r *http.Request) *C {
-	c := a.pool.Get().(*C)
+	c := a.contextPool.Get().(*C)
 	c.writercache.reset(w)
 	c.Request = r
-	c.index = -1
+	c.handlerIndex = -1
 	c.data = nil
 	c.render = a.render
 
 	return c
 }
 
-//JSON response with application/json; charset=UTF-8 Content type
+// Next runs the next HandlerFunc in the stack (ie. the next middleware)
+func (c *C) Next() {
+	c.handlerIndex++
+	s := int8(len(c.handlers))
+	if c.handlerIndex < s {
+		c.handlers[c.handlerIndex](c)
+	}
+}
+
+// Abort stops the middleware chain
+func (c *C) Abort() {
+	c.handlerIndex = AbortMiddlewareIndex
+}
+
+// AbortWithStatus stops the middleware chain and return the specified HTTP status code
+func (c *C) AbortWithStatus(status int) {
+	c.Writer.WriteHeader(status)
+	c.Abort()
+}
+
+// AddHeader adds an header to the response
+func (c *C) AddHeader(key string, value string) {
+	c.Writer.Header().Add(key, value)
+}
+
+// SetHeader replaces and sets an header to the response
+func (c *C) SetHeader(key string, value string) {
+	c.Writer.Header().Set(key, value)
+}
+
+// String response with text/html; charset=UTF-8 Content type
+func (c *C) String(status int, format string, val ...interface{}) {
+	c.Writer.Header().Set(HeaderContentType, "text/html; charset=UTF-8")
+	c.Writer.WriteHeader(status)
+
+	buf := bufPool.Get()
+	defer bufPool.Put(buf)
+
+	if len(val) == 0 {
+		buf.WriteString(format)
+	} else {
+		buf.WriteString(fmt.Sprintf(format, val...))
+	}
+
+	c.Writer.Write(buf.Bytes())
+}
+
+// JSON response with application/json; charset=UTF-8 Content type
 func (c *C) JSON(status int, v interface{}) {
-	c.Writer.Header().Set(contentType, "application/json; charset=UTF-8")
+	c.Writer.Header().Set(HeaderContentType, "application/json; charset=UTF-8")
 	c.Writer.WriteHeader(status)
 	if v == nil {
 		return
@@ -60,83 +104,71 @@ func (c *C) JSON(status int, v interface{}) {
 	c.Writer.Write(buf.Bytes())
 }
 
-//String response with text/html; charset=UTF-8 Content type
-func (c *C) String(status int, format string, val ...interface{}) {
-	c.Writer.Header().Set(contentType, "text/html; charset=UTF-8")
-	c.Writer.WriteHeader(status)
+// File responds a file with text/html content type from a specified file path
+func (c *C) File(status int, filePath string) {
+	bytes, err := ioutil.ReadFile(filePath)
 
-	buf := bufPool.Get()
-	defer bufPool.Put(buf)
-
-	if len(val) == 0 {
-		buf.WriteString(format)
-	} else {
-		buf.WriteString(fmt.Sprintf(format, val...))
+	if err != nil {
+		log.Printf("Could not read file: %s", filePath)
+		c.AbortWithStatus(500)
+		return
 	}
 
-	c.Writer.Write(buf.Bytes())
-}
-
-//Download response with application/octet-stream; charset=UTF-8 Content type
-func (c *C) Download(status int, v []byte) {
-	c.Writer.Header().Set(contentType, "application/octet-stream; charset=UTF-8")
+	// SVG are incorrectly detected as text/xml (well technically they are), but browsers require image/svg+xml
+	// to properly display SVGs. We'll assume that ".svg" files systematically of type image/svg+xml. Same happens
+	// with JavaScript files, they should be transferred as text/javascript
+	if strings.HasSuffix(filePath, ".svg") {
+		c.Writer.Header().Set(HeaderContentType, "image/svg+xml")
+	} else if strings.HasSuffix(filePath, ".js") {
+		c.Writer.Header().Set(HeaderContentType, "text/javascript")
+	} else if strings.HasSuffix(filePath, ".css") {
+		c.Writer.Header().Set(HeaderContentType, "text/css")
+	} else {
+		c.Writer.Header().Set(HeaderContentType, http.DetectContentType(bytes))
+	}
 	c.Writer.WriteHeader(status)
-	c.Writer.Write(v)
+	c.Writer.Write(bytes)
 }
 
-//HTML render template engine
-func (c *C) HTML(name string, data interface{}) {
-	c.render.Render(c.Writer, name, data)
-}
-
-//Param get param from route
+// Param returns a parameter value from the route
 func (c *C) Param(name string) string {
 	return c.params.ByName(name)
 }
 
-//ParseJSON decode json to interface{}
-func (c *C) ParseJSON(v interface{}) {
+// ParseJSON decodes json to interface{}
+func (c *C) ParseJSON(v interface{}) error {
 	defer c.Request.Body.Close()
-	c.Panic(json.NewDecoder(c.Request.Body).Decode(v))
+	return json.NewDecoder(c.Request.Body).Decode(v)
 }
 
-//HTTPLang get first language from HTTP Header
-func (c *C) HTTPLang() string {
-	langStr := c.Request.Header.Get(acceptLanguage)
-	return strings.Split(langStr, ",")[0]
-}
-
-//Redirect 302 response
-func (c *C) Redirect(url string) {
-	http.Redirect(c.Writer, c.Request, url, 302)
-}
-
-//Abort stop maddileware
-func (c *C) Abort() {
-	c.index = abortIndex
-}
-
-//AbortWithStatus stop maddileware and return http status code
-func (c *C) AbortWithStatus(status int) {
+// Download response with application/octet-stream; charset=UTF-8 Content type
+func (c *C) Download(status int, filename string, v []byte) {
+	c.Writer.Header().Set(HeaderContentType, "application/octet-stream; charset=UTF-8")
+	c.Writer.Header().Set(HeaderContentDisposition, fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	c.Writer.WriteHeader(status)
-	c.Abort()
+	c.Writer.Write(v)
 }
 
-//Next next middleware
-func (c *C) Next() {
-	c.index++
-	s := int8(len(c.handlers))
-	if c.index < s {
-		c.handlers[c.index](c)
-	}
+// DownloadStream response with application/octet-stream, but reading from a io.Reader
+func (c *C) DownloadStream(status int, filename string, v io.Reader) {
+	c.Writer.Header().Set(HeaderContentType, "application/octet-stream; charset=UTF-8")
+	c.Writer.Header().Set(HeaderContentDisposition, fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Writer.WriteHeader(status)
+	io.Copy(c.Writer, v)
 }
 
-//ClientIP get ip from RemoteAddr
-func (c *C) ClientIP() string {
+// ClientRemoteAddress returns the remote IP address and port
+func (c *C) ClientRemoteAddress() string {
 	return c.Request.RemoteAddr
 }
 
-//Set data
+// ClientIP returns the remote IP address, without port. See ClientRemoteAddress for source IP and port.
+func (c *C) ClientIP() string {
+	ra := c.Request.RemoteAddr
+	return ra[:strings.LastIndex(ra, ":")]
+}
+
+// Set stores arbitrary data inside this context to re-use in handlers
 func (c *C) Set(key string, v interface{}) {
 	if c.data == nil {
 		c.data = make(map[string]interface{})
@@ -144,52 +176,29 @@ func (c *C) Set(key string, v interface{}) {
 	c.data[key] = v
 }
 
-//SetAll data
+// SetAll stores and erases the existing data inside this context. See C.Set().
 func (c *C) SetAll(data map[string]interface{}) {
 	c.data = data
 }
 
-//Get data
+// Get retrieves data previously stored in this context using C.Set() or C.SetAll().
 func (c *C) Get(key string) interface{} {
 	return c.data[key]
 }
 
-//GetAllData return all data
+// GetAll returns all the data previously stored in this context using C.Set() or C.SetAll().
 func (c *C) GetAll() map[string]interface{} {
 	return c.data
 }
 
+// Sessions returns the sessions with the provided name
 func (c *C) Sessions(name string) *sessions.Session {
 	return c.sessions.Get(name)
 }
 
-func (c *C) MustQueryInt(key string, d int) int {
-	val := c.Request.URL.Query().Get(key)
-	if val == "" {
-		return d
-	}
-	i, err := strconv.Atoi(val)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return i
-}
-
-func (c *C) MustQueryFloat64(key string, d float64) float64 {
-	val := c.Request.URL.Query().Get(key)
-	if val == "" {
-		return d
-	}
-	f, err := strconv.ParseFloat(c.Request.URL.Query().Get(key), 64)
-	if err != nil {
-		panic(err)
-	}
-
-	return f
-}
-
-func (c *C) MustQueryString(key, d string) string {
+// QueryString returns a param value from the URL GET parameters, where "key" is the parameter key, and "d" is
+// the default value when the key isn't set in the current request.
+func (c *C) QueryString(key, d string) string {
 	val := c.Request.URL.Query().Get(key)
 	if val == "" {
 		return d
@@ -198,93 +207,53 @@ func (c *C) MustQueryString(key, d string) string {
 	return val
 }
 
-func (c *C) MustQueryStrings(key string, d []string) []string {
+// QueryString returns a param array from the URL GET parameters, where "key" is the parameter key, and "d" is
+// the default value when the key isn't set in the current request.
+func (c *C) QueryStringArray(key string, d []string) []string {
 	val := c.Request.URL.Query()[key]
-	if len(val) == 0 {
+	if val == nil {
 		return d
 	}
 
 	return val
 }
 
-func (c *C) MustQueryTime(key string, layout string, d time.Time) time.Time {
+// QueryStringInteger returns a param value from the URL GET parameters, where "key" is the parameter key, and "d" is
+// the default value when the key isn't set in the current request, or if the value is not a valid integer..
+func (c *C) QueryStringInteger(key string, d int64) int64 {
 	val := c.Request.URL.Query().Get(key)
 	if val == "" {
 		return d
 	}
-	t, err := time.Parse(layout, c.Request.URL.Query().Get(key))
+
+	valInt, err := strconv.ParseInt(val, 10, 64)
+
 	if err != nil {
-		panic(err)
-	}
-
-	return t
-}
-
-/////////////////////////
-
-func (c *C) MustPostInt(key string, d int) int {
-	val := c.Request.PostFormValue(key)
-	if val == "" {
-		return d
-	}
-	i, err := strconv.Atoi(val)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return i
-}
-
-func (c *C) MustPostFloat64(key string, d float64) float64 {
-	val := c.Request.PostFormValue(key)
-	if val == "" {
-		return d
-	}
-	f, err := strconv.ParseFloat(c.Request.URL.Query().Get(key), 64)
-	if err != nil {
-		panic(err)
-	}
-
-	return f
-}
-
-func (c *C) MustPostString(key, d string) string {
-	val := c.Request.PostFormValue(key)
-	if val == "" {
+		log.Printf("Failed to parse QueryString key '%s' value '%s' to int: %s", key, val, err)
 		return d
 	}
 
-	return val
+	return valInt
 }
 
-func (c *C) MustPostStrings(key string, d []string) []string {
+func (c *C) FormData() (url.Values, error) {
+	var err error
 	if c.Request.PostForm == nil {
-		c.Request.ParseForm()
+		err = c.Request.ParseForm()
 	}
 
-	val := c.Request.PostForm[key]
-	if len(val) == 0 {
-		return d
-	}
-
-	return val
+	return c.Request.PostForm, err
 }
 
-func (c *C) MustPostTime(key string, layout string, d time.Time) time.Time {
-	val := c.Request.PostFormValue(key)
-	if val == "" {
-		return d
-	}
-	t, err := time.Parse(layout, c.Request.URL.Query().Get(key))
-	if err != nil {
-		panic(err)
+func (c *C) MultipartFormData() (*multipart.Form, error) {
+	var err error
+	if c.Request.MultipartForm == nil {
+		err = c.Request.ParseMultipartForm(51200000)
 	}
 
-	return t
+	return c.Request.MultipartForm, err
 }
 
-func (c *C) Panic(err error) {
-	if err != nil {
-		panic(err)
-	}
+func (c *C) FormFile(key string) (multipart.File, *multipart.FileHeader, error) {
+	return c.Request.FormFile(key)
 }

@@ -35,10 +35,10 @@ func TestSession(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, req)
-	cookie := w.Header().Get("Set-Cookie")
+	cookieValue := w.Header().Get("Set-Cookie")
 
 	req, _ = http.NewRequest("GET", "/test", nil)
-	req.Header.Set("Cookie", cookie)
+	req.Header.Set("Cookie", cookieValue)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, req)
 }

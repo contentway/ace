@@ -1,17 +1,17 @@
 package ace
 
 import (
-	"github.com/plimble/utils/errors2"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
 var testHandler = func(c *C) { c.Next() }
 
 func TestHTTPMethod(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 
 	a := Default()
 	a.GET("/test", func(c *C) {
@@ -45,65 +45,65 @@ func TestHTTPMethod(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/test", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("Test", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("Test", w.Body.String())
 
 	r, _ = http.NewRequest("POST", "/test", nil)
 	r.ParseForm()
 	r.Form.Add("test", "hello")
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("hello", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("hello", w.Body.String())
 
 	r, _ = http.NewRequest("PUT", "/", nil)
 	r.ParseForm()
 	r.Form.Add("test", "hello")
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("hello", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("hello", w.Body.String())
 
 	r, _ = http.NewRequest("PATCH", "/", nil)
 	r.ParseForm()
 	r.Form.Add("test", "hello")
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("hello", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("hello", w.Body.String())
 
 	r, _ = http.NewRequest("DELETE", "/", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("deleted", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("deleted", w.Body.String())
 
 	r, _ = http.NewRequest("OPTIONS", "/", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("options", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("options", w.Body.String())
 
 	r, _ = http.NewRequest("HEAD", "/test", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("head", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("head", w.Body.String())
 
-	//tailing slash
+	// trailing slash
 	r, _ = http.NewRequest("GET", "/test/", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(301, w.Code)
+	ass.Equal(301, w.Code)
 
 	r, _ = http.NewRequest("POST", "/test/", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(307, w.Code)
+	ass.Equal(307, w.Code)
 }
 
 func TestNestedGroupRoute(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 
 	a := Default()
 	g1 := a.Group("/g1", testHandler)
@@ -121,18 +121,18 @@ func TestNestedGroupRoute(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/g1/g2/g3/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("g3", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("g3", w.Body.String())
 
 	r, _ = http.NewRequest("GET", "/g1/g2/g3/test", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("g3/test", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("g3/test", w.Body.String())
 }
 
 func TestGroupRoute(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 
 	a := Default()
 	g1 := a.Group("/g1", testHandler)
@@ -157,50 +157,53 @@ func TestGroupRoute(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/g1/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("g1", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("g1", w.Body.String())
 
 	r, _ = http.NewRequest("GET", "/g1/test", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("g1/test", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("g1/test", w.Body.String())
 
 	r, _ = http.NewRequest("POST", "/g2/", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("g2", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("g2", w.Body.String())
 
 	r, _ = http.NewRequest("POST", "/g2/test", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("g2/test", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("g2/test", w.Body.String())
 }
 
 func TestServeStatic(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
+
+	os.MkdirAll("/tmp/dims-autotest", 0755)
+	os.Create("/tmp/dims-autotest/segv_output.ZBG0OQ")
 
 	a := Default()
-	a.Static("/assets", "./", testHandler)
+	a.Static("/assets", "/tmp/dims-autotest", testHandler)
 
-	r, _ := http.NewRequest("GET", "/assets/README.md", nil)
+	r, _ := http.NewRequest("GET", "/assets/segv_output.ZBG0OQ", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
+	ass.Equal(200, w.Code)
 
 	r, _ = http.NewRequest("GET", "/assets/test.text", nil)
 	w = httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(404, w.Code)
+	ass.Equal(404, w.Code)
 }
 
 func TestConvertHandlerFunc(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 
 	a := Default()
-	a.GET("/", a.HTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	a.GET("/", a.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write([]byte("test"))
 	}))
@@ -208,12 +211,12 @@ func TestConvertHandlerFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("test", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("test", w.Body.String())
 }
 
 func TestRouteNotFound(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 
 	a := Default()
 	a.RouteNotFound(func(c *C) {
@@ -223,38 +226,17 @@ func TestRouteNotFound(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(404, w.Code)
-	assert.Equal("test not found", w.Body.String())
-}
-
-func TestPanic2(t *testing.T) {
-	assert := assert.New(t)
-	a := New()
-
-	a.Panic(func(c *C, rcv interface{}) {
-		err := rcv.(errors2.Error)
-		c.JSON(err.HttpStatus(), err)
-	})
-
-	a.GET("/", func(c *C) {
-		c.Panic(errors2.NewNotFound("not found"))
-		c.String(200, "123")
-	})
-
-	r, _ := http.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-	a.ServeHTTP(w, r)
-	assert.Equal(404, w.Code)
-	assert.Equal("{\"message\":\"not found\"}\n", w.Body.String())
+	ass.Equal(404, w.Code)
+	ass.Equal("test not found", w.Body.String())
 }
 
 func TestStaticPath(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 
 	a := New()
 	path := a.Router.staticPath("/")
-	assert.Equal("/*filepath", path)
+	ass.Equal("/*filepath", path)
 
 	path = a.Router.staticPath("/public")
-	assert.Equal("/public/*filepath", path)
+	ass.Equal("/public/*filepath", path)
 }

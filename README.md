@@ -1,14 +1,20 @@
-ACE [![godoc badge](http://godoc.org/github.com/plimble/ace?status.svg)](http://godoc.org/github.com/plimble/ace)   [![gocover badge](http://gocover.io/_badge/github.com/plimble/ace?t=3)](http://gocover.io/github.com/plimble/ace) [![Build Status](https://api.travis-ci.org/plimble/ace.svg?branch=master&t=3)](https://travis-ci.org/plimble/ace) [![Go Report Card](http://goreportcard.com/badge/plimble/ace?t=3)](http:/goreportcard.com/report/plimble/ace)
+ACE
 ========
 
-Blazing fast Go Web Framework
+[![godoc badge](http://godoc.org/github.com/contentway/ace?status.svg)](http://godoc.org/github.com/contentway/ace)
+[![gocover badge](http://gocover.io/_badge/github.com/contentway/ace?t=3)](http://gocover.io/github.com/contentway/ace)
+[![Build Status](https://api.travis-ci.org/contentway/ace.svg?branch=master&t=3)](https://travis-ci.org/contentway/ace)
+[![Go Report Card](http://goreportcard.com/badge/contentway/ace?t=3)](http://goreportcard.com/report/contentway/ace)
 
-![image](http://image.free.in.th/v/2013/id/150218064526.jpg)
+Blazing fast Go Web Framework, originally by [plimble](https://github.com/plimble/ace), but went unmaintained, so
+we hope to give it a second life here.
 
 #### Installation
 
+This library is compatible with Go Modules, so you can simply run `go mod update -add github.com/contentway/ace`
+
 ```
-go get github.com/plimble/ace
+go get github.com/contentway/ace
 ```
 
 #### Import
@@ -93,7 +99,7 @@ c.String(200, "Hello Ace")
 ##### Download
 
 ```go
-//application/octet-stream
+// application/octet-stream
 c.Download(200, []byte("Hello Ace"))
 ```
 
@@ -139,8 +145,8 @@ a.Use(func(c *ace.C){
 
 a.Get("/", func(c *ace.C){
 	isLogin := c.GetData("isLogin").(bool)
-	//or get all data
-	//c.GetAllData()
+	// or get all data
+	// c.GetAllData()
 })
 ```
 
@@ -178,8 +184,8 @@ a.Get("/save", func(c *ace.C){
 
 	c.ParseJSON(user)
 
-	//this func return error
-	//if error go to panic handler
+	// this func return error
+	// if error go to panic handler
 	c.Panic(doSomething1(user))
 	c.Panic(doSomething2(user))
 
@@ -190,7 +196,7 @@ a.Get("/get", func(c *ace.C){
 	id := c.Param("id")
 
 	user, err := doSomeThing()
-	//if error go to panic handler
+	// if error go to panic handler
 	c.Panic(err)
 
 	c.JSON(200, user)
@@ -249,7 +255,7 @@ store := cookie.NewCookieStore()
 a.Use(ace.Session(store, nil))
 
 a.GET("/", func(c *ace.C) {
-	//get session name
+	// get session name
 	session1 := c.Sessions("test")
 	session1.Set("test1", "123")
 	session1.Set("test2", 123)
@@ -263,7 +269,7 @@ a.GET("/", func(c *ace.C) {
 
 a.GET("/test", func(c *C) {
 	session := c.Sessions("test")
-	//get value from key test1 if not found default value ""
+	// get value from key test1 if not found default value ""
 	test1 := session.GetString("test1", "")
 	test2 := session.GetInt("test2", 0)
 

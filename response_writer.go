@@ -3,6 +3,7 @@ package ace
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 )
@@ -41,7 +42,7 @@ func (rw *responseWriter) reset(w http.ResponseWriter) {
 
 func (rw *responseWriter) WriteHeader(s int) {
 	if rw.Written() {
-		fmt.Errorf("[ACE] WARNING. Headers were already written!")
+		log.Printf("headers were already written")
 	}
 	rw.status = s
 	rw.callBefore()

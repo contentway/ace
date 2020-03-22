@@ -10,7 +10,7 @@ import (
 )
 
 func TestJSONResp(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 
 	data := map[string]interface{}{
 		"s": "test",
@@ -29,13 +29,13 @@ func TestJSONResp(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal(buf.String(), w.Body.String())
-	assert.Equal("application/json; charset=UTF-8", w.Header().Get("Content-Type"))
+	ass.Equal(200, w.Code)
+	ass.Equal(buf.String(), w.Body.String())
+	ass.Equal("application/json; charset=UTF-8", w.Header().Get("Content-Type"))
 }
 
 func TestStringResp(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 	a := New()
 	a.GET("/", func(c *C) {
 		c.String(200, "123")
@@ -44,28 +44,29 @@ func TestStringResp(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("123", w.Body.String())
-	assert.Equal("text/html; charset=UTF-8", w.Header().Get("Content-Type"))
+	ass.Equal(200, w.Code)
+	ass.Equal("123", w.Body.String())
+	ass.Equal("text/html; charset=UTF-8", w.Header().Get("Content-Type"))
 }
 
 func TestDownloadResp(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 	a := New()
 	a.GET("/", func(c *C) {
-		c.Download(200, []byte("123"))
+		c.Download(200, "test.txt", []byte("123"))
 	})
 
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("123", w.Body.String())
-	assert.Equal("application/octet-stream; charset=UTF-8", w.Header().Get("Content-Type"))
+	ass.Equal(200, w.Code)
+	ass.Equal("123", w.Body.String())
+	ass.Equal("application/octet-stream; charset=UTF-8", w.Header().Get("Content-Type"))
+	ass.Equal("attachment; filename=\"test.txt\"", w.Header().Get("Content-Disposition"))
 }
 
 func TestCData(t *testing.T) {
-	assert := assert.New(t)
+	ass := assert.New(t)
 	a := New()
 
 	a.Use(func(c *C) {
@@ -81,6 +82,6 @@ func TestCData(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, r)
-	assert.Equal(200, w.Code)
-	assert.Equal("123", w.Body.String())
+	ass.Equal(200, w.Code)
+	ass.Equal("123", w.Body.String())
 }

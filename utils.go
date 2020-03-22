@@ -1,16 +1,19 @@
 package ace
 
+import (
+	"os"
+	"strings"
+)
+
 func concat(s ...string) string {
-	size := 0
-	for i := 0; i < len(s); i++ {
-		size += len(s[i])
+	return strings.Join(s, "")
+}
+
+// File exists returns whether or not the filePath exists and is a file
+func FileExists(filePath string) bool {
+	if fi, err := os.Stat(filePath); err == nil && !fi.IsDir() {
+		return true
+	} else {
+		return false
 	}
-
-	buf := make([]byte, 0, size)
-
-	for i := 0; i < len(s); i++ {
-		buf = append(buf, []byte(s[i])...)
-	}
-
-	return string(buf)
 }
